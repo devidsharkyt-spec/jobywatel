@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>mObywatel</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background: #111318;
+            color: #f4f6fa;
+            font-family: Roboto, Arial, sans-serif;
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        body::after {
+            position: fixed;
+            top: max(14px, env(safe-area-inset-top));
+            right: max(14px, env(safe-area-inset-right));
+            z-index: 9999;
+            padding: 5px 10px;
+            border-radius: 999px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0;
+            pointer-events: none;
+        }
+
+        .screen {
+            width: min(100%, 480px);
+            min-height: 100dvh;
+            margin: 0 auto;
+            position: relative;
+            padding: calc(26px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+        }
+
+        .close-top {
+            appearance: none;
+            position: absolute;
+            top: calc(26px + env(safe-area-inset-top));
+            left: 24px;
+            width: 48px;
+            height: 48px;
+            border: 0;
+            background: transparent;
+            color: #f4f6fa;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .close-icon {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            display: block;
+        }
+
+        .close-icon::before,
+        .close-icon::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 19px;
+            width: 36px;
+            height: 4px;
+            border-radius: 4px;
+            background: currentColor;
+        }
+
+        .close-icon::before {
+            transform: rotate(45deg);
+        }
+
+        .close-icon::after {
+            transform: rotate(-45deg);
+        }
+
+        .loading-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            place-items: center;
+            background: #111318;
+        }
+
+        .loading .loading-layer {
+            display: grid;
+        }
+
+        .spinner {
+            width: 62px;
+            height: 62px;
+            border: 6px solid rgba(0, 122, 255, 0.22);
+            border-top-color: #0a84ff;
+            border-radius: 50%;
+            animation: spin 900ms linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading .close-top,
+        .loading .error-content,
+        .loading .actions {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .error-content {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            top: 45%;
+            transform: translateY(-50%);
+            text-align: center;
+            transition: opacity 180ms ease;
+        }
+
+        .error-mark {
+            width: 76px;
+            height: 76px;
+            border: 4px solid #ff5965;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            position: relative;
+            color: #ff5965;
+        }
+
+        .error-mark::before,
+        .error-mark::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 34px;
+            height: 5px;
+            border-radius: 5px;
+            background: currentColor;
+            transform-origin: center;
+        }
+
+        .error-mark::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .error-mark::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            color: #f4f6fa;
+            font-size: clamp(26px, 5.8vw, 30px);
+            line-height: 1.12;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        p {
+            margin: 0;
+            color: #d5d8df;
+            font-size: clamp(18px, 4.05vw, 21px);
+            line-height: 1.38;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .actions {
+            position: fixed;
+            left: 50%;
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            width: min(100%, 480px);
+            padding: 0 24px;
+            transition: opacity 180ms ease;
+        }
+
+        .action-button {
+            appearance: none;
+            width: 100%;
+            height: 58px;
+            border-radius: 16px;
+            font-size: clamp(19px, 4.8vw, 23px);
+            font-weight: 500;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .action-button.primary {
+            border: 0;
+            background: #098cff;
+            color: #ffffff;
+        }
+
+        .action-button.secondary {
+            margin-top: 12px;
+            border: 2px solid #f0f3f8;
+            background: transparent;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <main class="screen">
+        <button class="close-top" type="button" aria-label="Zamknij" data-close>
+            <span class="close-icon"></span>
+        </button>
+
+        <section class="error-content" aria-live="polite">
+            <div class="error-mark" aria-hidden="true"></div>
+            <h1>Wyst&#261;pi&#322; b&#322;&#261;d</h1>
+            <p>Nie mo&#380;emy wy&#347;wietli&#263; Twoich danych.<br>Spr&oacute;buj ponownie p&oacute;&#378;niej.</p>
+        </section>
+    </main>
+
+    <div class="actions">
+        <button class="action-button primary" type="button" id="retryButton">Spr&oacute;buj ponownie</button>
+        <button class="action-button secondary" type="button" data-close>Zamknij</button>
+    </div>
+
+    <div class="loading-layer" aria-hidden="true">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        function withParams(file) {
+            const query = params.toString();
+            return file + (query ? "?" + query : "");
+        }
+
+        function showError() {
+            document.body.classList.remove("loading");
+        }
+
+        function showSpinnerAgain() {
+            document.body.classList.add("loading");
+            setTimeout(showError, 1000);
+        }
+
+        document.querySelectorAll("[data-close]").forEach((button) => {
+            button.addEventListener("click", () => {
+                window.location.href = withParams("qr.html");
+            });
+        });
+
+        document.getElementById("retryButton").addEventListener("click", showSpinnerAgain);
+    </script>
+</body>
+</html>

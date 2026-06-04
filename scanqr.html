@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>mObywatel</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background: #000000;
+            color: #f4f5f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        body::after {
+            position: fixed;
+            top: max(14px, env(safe-area-inset-top));
+            right: max(14px, env(safe-area-inset-right));
+            z-index: 9999;
+            padding: 5px 10px;
+            border-radius: 999px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0;
+            pointer-events: none;
+        }
+
+        .screen {
+            width: min(100%, 480px);
+            min-height: 100dvh;
+            margin: 0 auto;
+            padding: calc(28px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+            position: relative;
+        }
+
+        .topbar {
+            height: 54px;
+            display: grid;
+            grid-template-columns: 48px 1fr 48px;
+            align-items: center;
+        }
+
+        .icon-button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: #c6c9d1;
+            height: 48px;
+            width: 48px;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .back-icon,
+        .close-icon {
+            width: 30px;
+            height: 30px;
+            position: relative;
+        }
+
+        .back-icon::before,
+        .back-icon::after {
+            content: "";
+            position: absolute;
+            left: 8px;
+            background: currentColor;
+            border-radius: 2px;
+        }
+
+        .back-icon::before {
+            top: 14px;
+            width: 26px;
+            height: 3px;
+        }
+
+        .back-icon::after {
+            top: 6px;
+            width: 18px;
+            height: 18px;
+            border-left: 3px solid currentColor;
+            border-bottom: 3px solid currentColor;
+            background: transparent;
+            transform: rotate(45deg);
+        }
+
+        .help-icon {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #9da2ad;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #c9ccd4;
+            font-size: 25px;
+            font-weight: 600;
+        }
+
+        h1 {
+            margin: 0;
+            color: #f0f2f6;
+            font-size: clamp(28px, 8vw, 38px);
+            font-weight: 650;
+            letter-spacing: 0;
+            line-height: 1.1;
+        }
+
+        .hint {
+            margin: 34px 0 24px;
+            color: #a4a7ae;
+            font-size: clamp(26px, 7.2vw, 36px);
+            line-height: 1.45;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .camera-card {
+            position: relative;
+            width: 100%;
+            height: min(52dvh, 620px);
+            min-height: 390px;
+            border-radius: 30px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 25% 18%, rgba(255,255,255,0.34), transparent 30%),
+                linear-gradient(135deg, #d4d2cb, #bab8b0);
+        }
+
+        video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.98;
+        }
+
+        .camera-card.no-camera video {
+            display: none;
+        }
+
+        .warning {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            min-height: 106px;
+            padding: 24px 56px 24px 76px;
+            border-radius: 20px;
+            background: rgba(31, 35, 42, 0.96);
+            color: #f5f6f8;
+            font-size: clamp(20px, 5.5vw, 28px);
+            line-height: 1.42;
+            font-weight: 400;
+            z-index: 3;
+        }
+
+        .warning.hidden {
+            display: none;
+        }
+
+        .warning-mark {
+            position: absolute;
+            left: 24px;
+            top: 28px;
+            width: 35px;
+            height: 35px;
+            border: 3px solid #d4d8e1;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #d4d8e1;
+            font-size: 25px;
+            font-weight: 650;
+        }
+
+        .warning-close {
+            position: absolute;
+            top: 28px;
+            right: 18px;
+            color: #c5c8cf;
+        }
+
+        .close-icon::before,
+        .close-icon::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 14px;
+            width: 28px;
+            height: 3px;
+            border-radius: 3px;
+            background: currentColor;
+        }
+
+        .close-icon::before {
+            transform: rotate(45deg);
+        }
+
+        .close-icon::after {
+            transform: rotate(-45deg);
+        }
+
+        .scan-frame {
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            width: min(55vw, 210px);
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .corner {
+            position: absolute;
+            width: 72px;
+            height: 72px;
+            border: 7px solid rgba(19, 19, 18, 0.96);
+            border-radius: 34px 0 0 0;
+        }
+
+        .corner.tl {
+            top: 0;
+            left: 0;
+            border-right: 0;
+            border-bottom: 0;
+        }
+
+        .corner.tr {
+            top: 0;
+            right: 0;
+            border-left: 0;
+            border-bottom: 0;
+            border-radius: 0 34px 0 0;
+        }
+
+        .corner.bl {
+            bottom: 0;
+            left: 0;
+            border-right: 0;
+            border-top: 0;
+            border-radius: 0 0 0 34px;
+        }
+
+        .corner.br {
+            bottom: 0;
+            right: 0;
+            border-left: 0;
+            border-top: 0;
+            border-radius: 0 0 34px 0;
+        }
+
+        .manual-button {
+            appearance: none;
+            width: 100%;
+            height: 68px;
+            margin-top: 34px;
+            border: 2px solid #4d8cff;
+            border-radius: 16px;
+            background: transparent;
+            color: #3f82ff;
+            font-size: clamp(25px, 7vw, 33px);
+            font-weight: 700;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .sheet {
+            position: fixed;
+            left: 50%;
+            bottom: 0;
+            width: min(100%, 480px);
+            transform: translate(-50%, 110%);
+            transition: transform 260ms ease;
+            z-index: 50;
+            background: #000000;
+            padding: 12px 24px calc(22px + env(safe-area-inset-bottom));
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .sheet.open {
+            transform: translate(-50%, 0);
+        }
+
+        .sheet-handle {
+            width: 64px;
+            height: 7px;
+            border-radius: 999px;
+            background: #3a435c;
+            margin: 0 auto 20px;
+        }
+
+        .sheet-head {
+            position: relative;
+            text-align: center;
+        }
+
+        .sheet h2 {
+            margin: 0;
+            color: #f5f6f8;
+            font-size: 28px;
+            font-weight: 750;
+            letter-spacing: 0;
+        }
+
+        .sheet .sheet-close {
+            position: absolute;
+            right: -2px;
+            top: -7px;
+            color: #f3f4f7;
+        }
+
+        .sheet p {
+            margin: 22px 0 28px;
+            color: #f5f6f8;
+            text-align: center;
+            font-size: 23px;
+            line-height: 1.25;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 76px;
+            border: 2px solid #d5e1ff;
+            border-radius: 18px;
+            background: #11141c;
+            color: #ffffff;
+            font-size: 28px;
+            padding: 0 18px;
+            outline: 0;
+            user-select: text;
+        }
+
+        .next-button {
+            appearance: none;
+            width: 100%;
+            height: 76px;
+            margin-top: 36px;
+            border: 0;
+            border-radius: 18px;
+            background: #1397ff;
+            color: #101317;
+            font-size: 28px;
+            font-weight: 750;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            place-items: center;
+            background: rgba(0, 0, 0, 0.78);
+        }
+
+        .loading-overlay.active {
+            display: grid;
+        }
+
+        .spinner {
+            width: 62px;
+            height: 62px;
+            border: 6px solid rgba(0, 122, 255, 0.22);
+            border-top-color: #0a84ff;
+            border-radius: 50%;
+            animation: spin 900ms linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-height: 780px) {
+            .screen {
+                padding-top: calc(18px + env(safe-area-inset-top));
+            }
+
+            .hint {
+                margin: 20px 0 18px;
+                font-size: 25px;
+            }
+
+            .camera-card {
+                height: 47dvh;
+                min-height: 330px;
+            }
+
+            .manual-button {
+                margin-top: 22px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="screen">
+        <header class="topbar">
+            <button class="icon-button" type="button" aria-label="Wr&oacute;&cacute;" id="backButton">
+                <span class="back-icon"></span>
+            </button>
+            <h1>Zeskanuj kod QR</h1>
+            <button class="icon-button" type="button" aria-label="Pomoc">
+                <span class="help-icon">?</span>
+            </button>
+        </header>
+
+        <p class="hint">Umie&sacute;&cacute; kod QR w ramce, aby go zeskanowa&cacute;.</p>
+
+        <section class="camera-card no-camera" id="cameraCard" aria-label="Podgl&aogon;d aparatu">
+            <video id="camera" autoplay playsinline muted></video>
+            <div class="warning" id="warning">
+                <span class="warning-mark">!</span>
+                Upewnij si&eogon;, &zdot;e kod QR pochodzi z wiarygodnego &zacute;r&oacute;d&lstrok;a.
+                <button class="icon-button warning-close" type="button" aria-label="Zamknij komunikat" id="warningClose">
+                    <span class="close-icon"></span>
+                </button>
+            </div>
+            <div class="scan-frame" aria-hidden="true">
+                <span class="corner tl"></span>
+                <span class="corner tr"></span>
+                <span class="corner bl"></span>
+                <span class="corner br"></span>
+            </div>
+        </section>
+
+        <button class="manual-button" type="button" id="manualOpen">Wpisz kod</button>
+    </main>
+
+    <section class="sheet" id="manualSheet" aria-label="Wpisywanie kodu">
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+            <h2>Kod</h2>
+            <button class="icon-button sheet-close" type="button" aria-label="Zamknij" id="manualClose">
+                <span class="close-icon"></span>
+            </button>
+        </div>
+        <p>Wpisz lub wklej kod.</p>
+        <input class="code-input" id="codeInput" inputmode="text" autocomplete="off" spellcheck="false">
+        <button class="next-button" type="button" id="manualSubmit">Dalej</button>
+    </section>
+
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const cameraCard = document.getElementById("cameraCard");
+        const video = document.getElementById("camera");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+        const manualSheet = document.getElementById("manualSheet");
+        const codeInput = document.getElementById("codeInput");
+        let stream = null;
+        let detector = null;
+        let scanning = false;
+        let finished = false;
+
+        function withParams(file) {
+            const query = params.toString();
+            return file + (query ? "?" + query : "");
+        }
+
+        function closeCamera() {
+            if (!stream) return;
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+        }
+
+        function showLoadingThenError() {
+            if (finished) return;
+            finished = true;
+            closeCamera();
+            loadingOverlay.classList.add("active");
+            setTimeout(() => {
+                window.location.href = withParams("scanqr-error.html");
+            }, 1000);
+        }
+
+        async function startCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                return;
+            }
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
+                });
+                video.srcObject = stream;
+                cameraCard.classList.remove("no-camera");
+
+                if ("BarcodeDetector" in window) {
+                    try {
+                        detector = new BarcodeDetector({ formats: ["qr_code"] });
+                        scanning = true;
+                        requestAnimationFrame(scanFrame);
+                    } catch (error) {
+                        detector = null;
+                    }
+                }
+            } catch (error) {
+                cameraCard.classList.add("no-camera");
+            }
+        }
+
+        async function scanFrame() {
+            if (!scanning || !detector || finished) return;
+            if (video.readyState >= 2) {
+                try {
+                    const codes = await detector.detect(video);
+                    if (codes && codes.length > 0) {
+                        showLoadingThenError();
+                        return;
+                    }
+                } catch (error) {
+                    scanning = false;
+                    return;
+                }
+            }
+            requestAnimationFrame(scanFrame);
+        }
+
+        document.getElementById("backButton").addEventListener("click", () => {
+            closeCamera();
+            window.location.href = withParams("qr.html");
+        });
+
+        document.getElementById("warningClose").addEventListener("click", () => {
+            document.getElementById("warning").classList.add("hidden");
+        });
+
+        document.getElementById("manualOpen").addEventListener("click", () => {
+            manualSheet.classList.add("open");
+            setTimeout(() => codeInput.focus(), 260);
+        });
+
+        document.getElementById("manualClose").addEventListener("click", () => {
+            manualSheet.classList.remove("open");
+        });
+
+        document.getElementById("manualSubmit").addEventListener("click", showLoadingThenError);
+
+        window.addEventListener("pagehide", closeCamera);
+        startCamera();
+    </script>
+</body>
+</html>
